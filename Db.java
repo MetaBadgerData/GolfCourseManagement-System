@@ -37,7 +37,7 @@ public class Db {
 	private Connection connection;
 	
 	public Db() {
-		String password = "tgu$K+wyeCG7P-fq"; //TODO: set this to your password
+		String password = ""; //TODO: set this to your password
 		String encodedPassword;
 		try {
 			encodedPassword = URLEncoder.encode(password, StandardCharsets.UTF_8.toString());
@@ -85,6 +85,19 @@ public class Db {
 		stmt.setString(2, e.getItem_name());
 		stmt.setString(3, e.getCategory());
 		stmt.setDouble(4, e.getPrice());
+		int numRowsAffected = stmt.executeUpdate();
+		System.out.println("Number of rows affected: " + numRowsAffected);
+	}
+
+	public void insertReservation(Reservations e) throws SQLException {
+		String sql = "INSERT INTO Reservations (GolferID, CourseID, Date, Time, TotalCost) VALUES (?, ?, ?, ?, ?)";
+		PreparedStatement stmt = connection.prepareStatement(sql);
+		stmt.setInt(1, e.getGolferId());
+		stmt.setInt(2, e.getCourseId());
+		stmt.setString(3, e.getDate());
+		stmt.setString(4, e.getTime());
+		stmt.setDouble(4, e.getTotalCost());
+
 		int numRowsAffected = stmt.executeUpdate();
 		System.out.println("Number of rows affected: " + numRowsAffected);
 	}
