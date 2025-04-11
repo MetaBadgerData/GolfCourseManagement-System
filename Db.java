@@ -55,6 +55,9 @@ public class Db {
 			System.out.println(e);
 		}
 	}
+	public Connection getConnection() {
+		return connection;
+	}
 	
 	public void disconnect() {
 		try {
