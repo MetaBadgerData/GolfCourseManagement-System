@@ -9,6 +9,7 @@ public class SQLInterface extends JFrame {
     private JTextArea queryArea;
     private JTable resultTable;
     private JButton executeButton;
+    private JButton clearButton;
     private JLabel statusLabel;
 
     private Db db;
@@ -25,20 +26,29 @@ public class SQLInterface extends JFrame {
         queryArea = new JTextArea(5, 50);
         resultTable = new JTable();
         executeButton = new JButton("Execute");
+        clearButton = new JButton("Clear");
+
         statusLabel = new JLabel("Status: Ready");
 
         JScrollPane queryScroll = new JScrollPane(queryArea);
         JScrollPane tableScroll = new JScrollPane(resultTable);
 
         executeButton.addActionListener(this::executeQuery);
+        clearButton.addActionListener(e -> {
+            queryArea.setText("");
+            resultTable.setModel(new DefaultTableModel());
+            statusLabel.setText("Status: Cleared");
+        });
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(queryScroll, BorderLayout.CENTER);
         topPanel.add(executeButton, BorderLayout.EAST);
+        topPanel.add(clearButton, BorderLayout.WEST);
 
         add(topPanel, BorderLayout.NORTH);
         add(tableScroll, BorderLayout.CENTER);
         add(statusLabel, BorderLayout.SOUTH);
+        add(clearButton, BorderLayout.EAST);
     }
 
     private void initDatabase() {
