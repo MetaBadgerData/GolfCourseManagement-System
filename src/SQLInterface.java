@@ -11,6 +11,8 @@ public class SQLInterface extends JFrame {
     private JLabel statusLabel;
     private JTextField searchField;
     private JButton addReservationButton;
+    private JButton addGolferButton;
+    private JButton addStaffButton;
     private JButton removeButton;
     private JButton updateButton;
     private JButton totalReservationsButton;
@@ -37,7 +39,7 @@ public class SQLInterface extends JFrame {
 
     private Db db;
 
-    private static final String INACTIVE_GOLFERS_QUERY = "SELECT Golfers.GolferID, Golfers.FirstName, Golfers.LastName, Golfers.MembershipStatus "
+    private static final String INACTIVE_GOLFERS_QUERY = "SELECT Golfers.GolferID, Golfers.SName, Golfers.LastName, Golfers.MembershipStatus "
             +
             "FROM Golfers " +
             "WHERE Golfers.golferID NOT IN (SELECT GolferID FROM Reservations)";
@@ -63,13 +65,13 @@ public class SQLInterface extends JFrame {
             "ORDER BY totalReservations DESC " + 
             "LIMIT 5";
     
-    private static final String TOTAL_SPENDING_RESERVATION_QUERY = "SELECT  g.GolferID, g.FirstName, g.LastName, COUNT(r.ReservationID) AS NumReservations, SUM(r.TotalCost) AS TotalSpent " + 
+    private static final String TOTAL_SPENDING_RESERVATION_QUERY = "SELECT  g.GolferID, g.SName, g.LastName, COUNT(r.ReservationID) AS NumReservations, SUM(r.TotalCost) AS TotalSpent " + 
             "FROM Golfers g " +
             "LEFT JOIN Reservations r ON g.GolferID = r.GolferID " +
-            "GROUP BY g.GolferID, g.FirstName, g.LastName " +
+            "GROUP BY g.GolferID, g.SName, g.LastName " +
             "ORDER BY TotalSpent DESC;";
 
-    private static final String FREE_LOADER_QUERY = "SELECT g.GolferID, g.FirstName, g.LastName "
+    private static final String FREE_LOADER_QUERY = "SELECT g.GolferID, g.SName, g.LastName "
             +
             "FROM Golfers g " +
             "WHERE g.GolferID IN (SELECT DISTINCT r.GolferID FROM Reservations r WHERE r.GolferID IS NOT NULL) " +
@@ -89,10 +91,10 @@ public class SQLInterface extends JFrame {
             "GROUP BY g.GolferID " + 
             ") AS GolferReservationCounts;";
 
-    private static final String RESERVATION_LEADER_QUERY = "SELECT g.GolferID, g.FirstName, g.LastName, COUNT(r.ReservationID) AS ReservationCount " +
+    private static final String RESERVATION_LEADER_QUERY = "SELECT g.GolferID, g.SName, g.LastName, COUNT(r.ReservationID) AS ReservationCount " +
             "FROM Golfers g " +
             "LEFT JOIN Reservations r ON g.GolferID = r.GolferID " + 
-            "GROUP BY g.GolferID, g.FirstName, g.LastName " +
+            "GROUP BY g.GolferID, g.SName, g.LastName " +
             "HAVING COUNT(r.ReservationID) > ( " + 
             "SELECT AVG(ReservationCount) AS AvgReservationsPerGolfer " +
             "FROM ( Select g.GolferID, COUNT(r.ReservationID) AS ReservationCount " +
@@ -134,6 +136,11 @@ public class SQLInterface extends JFrame {
         searchField = new JTextField(10);
         searchButton = new JButton("Search");
         addReservationButton = new JButton("Add Reservation");
+        addReservationButton.setVisible(false);
+        addGolferButton = new JButton("Add Golfer");
+        addGolferButton.setVisible(false);
+        addStaffButton = new JButton("Add Staff");
+        addStaffButton.setVisible(false);
         removeButton = new JButton("Remove");
         updateButton = new JButton("Update");
             
@@ -153,6 +160,17 @@ public class SQLInterface extends JFrame {
             //statusLabel.setText("Status: Add button clicked");
             new ReservationForm(this, db, () -> executeQuery("SELECT * FROM Reservations")).setVisible(true);
         });
+
+        addGolferButton.addActionListener(e -> {
+            // Implement add golfer functionality
+            new GolferForm(this, db, () -> executeQuery("SELECT * FROM Golfers")).setVisible(true);
+        });
+
+        addStaffButton.addActionListener(e -> {
+            // Implement add staff functionality
+            new StaffForm(this, db, () -> executeQuery("SELECT * FROM Staff")).setVisible(true);
+        });
+
         removeButton.addActionListener(e -> {
             // Implement remove functionality
             statusLabel.setText("Status: Remove button clicked");
@@ -177,31 +195,49 @@ public class SQLInterface extends JFrame {
 
 
         golfersButton.addActionListener(e -> {
+            addStaffButton.setVisible(false);
+            addReservationButton.setVisible(false);
+            addGolferButton.setVisible(true);
             queryButtonsPanel.setVisible(false);
             executeQuery("SELECT * FROM Golfers");
         });
 
         staffButton.addActionListener(e -> {
+            addStaffButton.setVisible(true);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(false);
             queryButtonsPanel.setVisible(false);
             executeQuery("SELECT * FROM Staff");
         });
 
         buysButton.addActionListener(e -> {
+            addStaffButton.setVisible(false);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(false);
             queryButtonsPanel.setVisible(false);
             executeQuery("SELECT * FROM Buys");
         });
 
         providesButton.addActionListener(e -> {
+            addStaffButton.setVisible(false);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(false);
             queryButtonsPanel.setVisible(false);
             executeQuery("SELECT * FROM Provides");
         });
 
         reservationsButton.addActionListener(e -> {
+            addStaffButton.setVisible(false);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(true);
             queryButtonsPanel.setVisible(false);
             executeQuery("SELECT * FROM Reservations");
         });
 
         menuButton.addActionListener(e -> {
+            addStaffButton.setVisible(false);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(false);
             queryButtonsPanel.setVisible(false);
             executeQuery("SELECT * FROM Menu");
         });
@@ -284,6 +320,8 @@ public class SQLInterface extends JFrame {
         searchPanel.add(searchField);
         searchPanel.add(searchButton);
         searchPanel.add(addReservationButton);
+        searchPanel.add(addGolferButton);
+        searchPanel.add(addStaffButton);
         searchPanel.add(removeButton);
         searchPanel.add(updateButton);
 
@@ -418,6 +456,127 @@ class ReservationForm extends JDialog {
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to add reservation.");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
+
+class GolferForm extends JDialog {
+    private JTextField SNameField, lastNameField, membershipStatusField, ageField;
+    private JButton submitButton;
+    private Db db;
+    private Runnable onSuccess;
+
+    public GolferForm(JFrame parent, Db db, Runnable onSuccess) {
+        super(parent, "Add Golfer", true);
+        this.db = db;
+        this.onSuccess = onSuccess;
+        setLayout(new GridLayout(4, 2, 5, 5));
+        setSize(300, 200);
+        setLocationRelativeTo(parent);
+
+        SNameField = new JTextField();
+        lastNameField = new JTextField();
+        membershipStatusField = new JTextField();
+        ageField = new JTextField();
+
+        submitButton = new JButton("Submit");
+
+        add(new JLabel("First Name:"));
+        add(SNameField);
+        add(new JLabel("Last Name:"));
+        add(lastNameField);
+        add(new JLabel("Membership Status:"));
+        add(membershipStatusField);
+        add(new JLabel("Age:"));
+        add(ageField);
+        add(new JLabel());
+        add(submitButton);
+
+        submitButton.addActionListener(e -> addGolfer());
+    }
+
+    private void addGolfer() {
+        try {
+            String SName = SNameField.getText().trim();
+            String lastName = lastNameField.getText().trim();
+            String status = membershipStatusField.getText().trim();
+            int age = Integer.parseInt(ageField.getText().trim());
+
+            String sql = "INSERT INTO Golfers (SName, LastName, MembershipStatus, Age) VALUES (?, ?, ?, ?)";
+            PreparedStatement stmt = db.getConnection().prepareStatement(sql);
+            stmt.setString(1, SName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, status);
+            stmt.setInt(4, age);
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Golfer added successfully!");
+                onSuccess.run();
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add golfer.");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
+
+class StaffForm extends JDialog {
+    private JTextField SNameField, roleField, salaryField;
+    private JButton submitButton;
+    private Db db;
+    private Runnable onSuccess;
+
+    public StaffForm(JFrame parent, Db db, Runnable onSuccess) {
+        super(parent, "Add Staff Member", true);
+        this.db = db;
+        this.onSuccess = onSuccess;
+        setLayout(new GridLayout(4, 2, 5, 5));
+        setSize(300, 200);
+        setLocationRelativeTo(parent);
+
+        SNameField = new JTextField();
+        roleField = new JTextField();
+        salaryField = new JTextField();
+
+        submitButton = new JButton("Submit");
+
+        add(new JLabel("Staff Full Name:"));
+        add(SNameField);
+        add(new JLabel("Role:"));
+        add(roleField);
+        add(new JLabel("Salary:"));
+        add(salaryField);
+        add(new JLabel());
+        add(submitButton);
+
+        submitButton.addActionListener(e -> addStaff());
+    }
+
+    private void addStaff() {
+        try {
+            String SName = SNameField.getText().trim();
+            String position = roleField.getText().trim();
+            double salary = Double.parseDouble(salaryField.getText().trim());
+
+            String sql = "INSERT INTO Staff (SName, Role, Salary) VALUES (?, ?, ?)";
+            PreparedStatement stmt = db.getConnection().prepareStatement(sql);
+            stmt.setString(1, SName);
+            stmt.setString(3, position);
+            stmt.setDouble(2, salary);
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Staff member added successfully!");
+                onSuccess.run();
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add staff member.");
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
