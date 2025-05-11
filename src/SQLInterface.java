@@ -5,8 +5,10 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.*;
+import java.lang.Integer;
 
 public class SQLInterface extends JFrame {
+    private JTable golferTable;
     private JTable resultTable;
     private JLabel statusLabel;
     private JTextField searchField;
@@ -17,6 +19,7 @@ public class SQLInterface extends JFrame {
     private JButton removeButton;
     private JButton updateButton;
     private JButton updateReservationButton;
+    private JButton updateGolferButton;
     private JButton totalReservationsButton;
     private JButton habitsButton;
     private JButton lowSpendingButton;
@@ -153,6 +156,9 @@ public class SQLInterface extends JFrame {
         updateButton = new JButton("Update");
         updateReservationButton = new JButton("Update Reservation");
         updateReservationButton.setVisible(false);
+        updateGolferButton = new JButton("Update Golfer");
+        updateGolferButton.setVisible(false);
+
             
         searchButton.addActionListener(e -> {
             String searchText = searchField.getText();
@@ -192,6 +198,22 @@ public class SQLInterface extends JFrame {
             new UpdateReservationForm(this, db, 1, () -> executeQuery("SELECT * FROM Reservations")).setVisible(true);
         });
 
+        updateGolferButton.addActionListener(e -> {
+            Integer selectedGolferID = getSelectedGolferID();
+            if (selectedGolferID == null) {
+                JOptionPane.showMessageDialog(this, "Please select a golfer to update.");
+                return;
+            }
+
+            if (selectedGolferID == -1) {
+                JOptionPane.showMessageDialog(this, "Please select a golfer to update.");
+                return;
+            }
+
+            new GolferUpdateForm(this, db, selectedGolferID, () -> executeQuery("SELECT * FROM Golfers")).setVisible(true);
+            statusLabel.setText("Status: Update Golfer button clicked");
+        });
+
         // tableButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         // String[] mainTable = {"Golfers", "GolfCourses", "Reservations", "Menu", "Buys"};
         // for (String tableName : mainTable) {
@@ -207,6 +229,7 @@ public class SQLInterface extends JFrame {
 
 
         golfersButton.addActionListener(e -> {
+            updateGolferButton.setVisible(true);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
@@ -217,6 +240,7 @@ public class SQLInterface extends JFrame {
         });
 
         staffButton.addActionListener(e -> {
+            updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(true);
@@ -227,6 +251,7 @@ public class SQLInterface extends JFrame {
         });
 
         buysButton.addActionListener(e -> {
+            updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
@@ -237,6 +262,7 @@ public class SQLInterface extends JFrame {
         });
 
         providesButton.addActionListener(e -> {
+            updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
@@ -247,6 +273,7 @@ public class SQLInterface extends JFrame {
         });
 
         reservationsButton.addActionListener(e -> {
+            updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(true);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
@@ -257,6 +284,7 @@ public class SQLInterface extends JFrame {
         });
 
         golfCoursesButton.addActionListener(e -> {
+            updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
@@ -267,6 +295,7 @@ public class SQLInterface extends JFrame {
         });
 
         menuButton.addActionListener(e -> {
+            updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(true);
             addStaffButton.setVisible(false);
@@ -351,6 +380,8 @@ public class SQLInterface extends JFrame {
         buttonPanel.add(providesButton);
         buttonPanel.setVisible(true);
 
+        JScrollPane scrollPane = new JScrollPane(golferTable);
+        add(scrollPane, BorderLayout.CENTER);
 
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS)); 
@@ -366,6 +397,7 @@ public class SQLInterface extends JFrame {
         searchPanel.add(removeButton);
         searchPanel.add(updateButton);
         searchPanel.add(updateReservationButton);
+        searchPanel.add(updateGolferButton);
 
         topPanel = new JPanel(new BorderLayout());
         JPanel topButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -407,6 +439,7 @@ public class SQLInterface extends JFrame {
             }
 
             DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
             while (rs.next()) {
                 Object[] row = new Object[columnCount];
                 for (int i = 0; i < columnCount; i++) {
@@ -416,6 +449,8 @@ public class SQLInterface extends JFrame {
             }
 
             resultTable.setModel(model);
+            resultTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            resultTable.setRowSelectionAllowed(true); 
             sorter = new TableRowSorter<>(model);
             resultTable.setRowSorter(sorter);
             statusLabel.setText("Status: Query executed successfully.");
@@ -427,6 +462,27 @@ public class SQLInterface extends JFrame {
     private void showError(String message) {
         statusLabel.setText("Status: " + message);
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public Integer getSelectedGolferID() {
+        int selectedRow = resultTable.getSelectedRow();
+        if (selectedRow == -1) {
+            return null;
+        }
+
+        int modelRow = resultTable.convertRowIndexToModel(selectedRow); // handles sorting
+        Object value = resultTable.getModel().getValueAt(modelRow, 0); // assuming ID is in column 0
+
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else {
+            try {
+                return Integer.parseInt(value.toString());
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
     }
 
     public static void main(String[] args) {
