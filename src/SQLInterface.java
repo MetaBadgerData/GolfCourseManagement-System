@@ -20,6 +20,7 @@ public class SQLInterface extends JFrame {
     private JButton habitsButton;
     private JButton lowSpendingButton;
     private JButton searchButton;
+    private JButton golfCoursesButton;
     private JButton menuButton;
     private JButton courseRevenueButton;
     private JButton providesButton;
@@ -121,6 +122,7 @@ public class SQLInterface extends JFrame {
         habitsButton = new JButton("Habits");
         lowSpendingButton = new JButton("Low_spending_poopy_golfers");
         golfersButton = new JButton("Golfers");
+        golfCoursesButton = new JButton("Golf Courses");
         buysButton = new JButton("Buys");
         reservationsButton = new JButton("Reservations");
         staffButton = new JButton("Staff");
@@ -242,6 +244,15 @@ public class SQLInterface extends JFrame {
             executeQuery("SELECT * FROM Reservations");
         });
 
+        golfCoursesButton.addActionListener(e -> {
+            addMenuButton.setVisible(false);
+            addStaffButton.setVisible(false);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(false);
+            queryButtonsPanel.setVisible(false);
+            executeQuery("SELECT * FROM GolfCourses");
+        });
+
         menuButton.addActionListener(e -> {
             addMenuButton.setVisible(true);
             addStaffButton.setVisible(false);
@@ -314,6 +325,7 @@ public class SQLInterface extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(menuButton);
         buttonPanel.add(golfersButton);
+        buttonPanel.add(golfCoursesButton);
         buttonPanel.add(staffButton);
         buttonPanel.add(reservationsButton);
         buttonPanel.add(buysButton);
