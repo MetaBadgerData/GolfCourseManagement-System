@@ -17,6 +17,7 @@ public class SQLInterface extends JFrame {
     private JButton addStaffButton;
     private JButton addMenuButton;
     private JButton removeButton;
+    private JButton removeGolferButton;
     private JButton updateButton;
     private JButton updateReservationButton;
     private JButton updateGolferButton;
@@ -28,6 +29,7 @@ public class SQLInterface extends JFrame {
     private JButton menuButton;
     private JButton courseRevenueButton;
     private JButton providesButton;
+    private JButton playsButton;
     private JButton golfersButton;
     private JButton buysButton;
     private JButton staffButton;
@@ -131,6 +133,7 @@ public class SQLInterface extends JFrame {
         reservationsButton = new JButton("Reservations");
         staffButton = new JButton("Staff");
         providesButton = new JButton("Provides");
+        playsButton = new JButton("Plays");
         courseRevenueButton = new JButton("Show Course Revenue");
         mostPopFoodButton = new JButton("Most Popular Food");
         worstBeverageButton = new JButton("Find Worst Beverage");
@@ -152,7 +155,11 @@ public class SQLInterface extends JFrame {
         addStaffButton.setVisible(false);
         addMenuButton = new JButton("Add Menu");
         addMenuButton.setVisible(false);
+
         removeButton = new JButton("Remove");
+        removeGolferButton = new JButton("Remove Golfer");
+        removeGolferButton.setVisible(false);
+
         updateButton = new JButton("Update");
         updateReservationButton = new JButton("Update Reservation");
         updateReservationButton.setVisible(false);
@@ -190,6 +197,29 @@ public class SQLInterface extends JFrame {
         removeButton.addActionListener(e -> {
             statusLabel.setText("Status: Remove button clicked");
         });
+
+        removeGolferButton.addActionListener(e -> {
+            Integer selectedGolferID = getSelectedGolferID();
+            if (selectedGolferID == null) {
+                JOptionPane.showMessageDialog(this, "Please select a golfer to remove.");
+                return;
+            }
+
+            String sql = "DELETE FROM Golfers WHERE GolferID = ?";
+            try (PreparedStatement stmt = db.getConnection().prepareStatement(sql)) {
+                stmt.setInt(1, selectedGolferID);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(this, "Golfer removed successfully!");
+                    executeQuery("SELECT * FROM Golfers");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to remove golfer.");
+                }
+            } catch (SQLException ex) {
+                showError("SQL Error: " + ex.getMessage());
+            }
+        });
+
         updateButton.addActionListener(e -> {
             statusLabel.setText("Status: Update button clicked");
         });
@@ -229,6 +259,8 @@ public class SQLInterface extends JFrame {
 
 
         golfersButton.addActionListener(e -> {
+            removeGolferButton.setVisible(true);
+            updateButton.setVisible(false);
             updateGolferButton.setVisible(true);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
@@ -240,6 +272,7 @@ public class SQLInterface extends JFrame {
         });
 
         staffButton.addActionListener(e -> {
+            removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
@@ -251,6 +284,7 @@ public class SQLInterface extends JFrame {
         });
 
         buysButton.addActionListener(e -> {
+            removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
@@ -262,6 +296,7 @@ public class SQLInterface extends JFrame {
         });
 
         providesButton.addActionListener(e -> {
+            removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
@@ -272,7 +307,20 @@ public class SQLInterface extends JFrame {
             executeQuery("SELECT * FROM Provides");
         });
 
+        playsButton.addActionListener(e -> {
+            removeGolferButton.setVisible(false);
+            updateGolferButton.setVisible(false);
+            updateReservationButton.setVisible(false);
+            addMenuButton.setVisible(false);
+            addStaffButton.setVisible(false);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(false);
+            queryButtonsPanel.setVisible(false);
+            executeQuery("SELECT * FROM Plays");
+        });
+
         reservationsButton.addActionListener(e -> {
+            removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(true);
             addMenuButton.setVisible(false);
@@ -284,6 +332,7 @@ public class SQLInterface extends JFrame {
         });
 
         golfCoursesButton.addActionListener(e -> {
+            removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
@@ -295,6 +344,7 @@ public class SQLInterface extends JFrame {
         });
 
         menuButton.addActionListener(e -> {
+            removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
             addMenuButton.setVisible(true);
@@ -378,6 +428,7 @@ public class SQLInterface extends JFrame {
         buttonPanel.add(reservationsButton);
         buttonPanel.add(buysButton);
         buttonPanel.add(providesButton);
+        buttonPanel.add(playsButton);
         buttonPanel.setVisible(true);
 
         JScrollPane scrollPane = new JScrollPane(golferTable);
@@ -395,6 +446,7 @@ public class SQLInterface extends JFrame {
         searchPanel.add(addStaffButton);
         searchPanel.add(addMenuButton);
         searchPanel.add(removeButton);
+        searchPanel.add(removeGolferButton);
         searchPanel.add(updateButton);
         searchPanel.add(updateReservationButton);
         searchPanel.add(updateGolferButton);
