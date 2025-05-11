@@ -19,6 +19,7 @@ public class SQLInterface extends JFrame {
     private JButton removeButton;
     private JButton removeGolferButton;
     private JButton removeStaffButton;
+    private JButton removeReservationButton;
     private JButton updateButton;
     private JButton updateReservationButton;
     private JButton updateGolferButton;
@@ -163,6 +164,8 @@ public class SQLInterface extends JFrame {
         removeGolferButton.setVisible(false);
         removeStaffButton = new JButton("Remove staff");
         removeStaffButton.setVisible(false);
+        removeReservationButton = new JButton("Remove Reservation");
+        removeReservationButton.setVisible(false);
 
         updateButton = new JButton("Update");
         updateReservationButton = new JButton("Update Reservation");
@@ -246,6 +249,28 @@ public class SQLInterface extends JFrame {
             }
         });
 
+        removeReservationButton.addActionListener(e -> {
+            Integer selectedReservationID = getSelectedReservationID();
+            if (selectedReservationID == null) {
+                JOptionPane.showMessageDialog(this, "Please select a reservation to remove.");
+                return;
+            }
+
+            String sql = "DELETE FROM Reservations WHERE ReservationID = ?";
+            try (PreparedStatement stmt = db.getConnection().prepareStatement(sql)) {
+                stmt.setInt(1, selectedReservationID);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(this, "Reservation removed successfully!");
+                    executeQuery("SELECT * FROM Reservations");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to remove reservation.");
+                }
+            } catch (SQLException ex) {
+                showError("SQL Error: " + ex.getMessage());
+            }
+        });
+
         updateButton.addActionListener(e -> {
             statusLabel.setText("Status: Update button clicked");
         });
@@ -285,6 +310,7 @@ public class SQLInterface extends JFrame {
 
 
         golfersButton.addActionListener(e -> {
+            removeReservationButton.setVisible(false);
             removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(true);
             updateButton.setVisible(false);
@@ -299,6 +325,7 @@ public class SQLInterface extends JFrame {
         });
 
         staffButton.addActionListener(e -> {
+            removeReservationButton.setVisible(false);
             removeStaffButton.setVisible(true);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
@@ -312,6 +339,7 @@ public class SQLInterface extends JFrame {
         });
 
         buysButton.addActionListener(e -> {
+            removeReservationButton.setVisible(false);
             removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
@@ -325,6 +353,7 @@ public class SQLInterface extends JFrame {
         });
 
         providesButton.addActionListener(e -> {
+            removeReservationButton.setVisible(false);
             removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
@@ -338,6 +367,7 @@ public class SQLInterface extends JFrame {
         });
 
         playsButton.addActionListener(e -> {
+            removeReservationButton.setVisible(false);
             removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
@@ -351,6 +381,7 @@ public class SQLInterface extends JFrame {
         });
 
         reservationsButton.addActionListener(e -> {
+            removeReservationButton.setVisible(true);
             removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
@@ -364,6 +395,7 @@ public class SQLInterface extends JFrame {
         });
 
         golfCoursesButton.addActionListener(e -> {
+            removeReservationButton.setVisible(false);
             removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
@@ -377,6 +409,7 @@ public class SQLInterface extends JFrame {
         });
 
         menuButton.addActionListener(e -> {
+            removeReservationButton.setVisible(false);
             removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
@@ -482,6 +515,7 @@ public class SQLInterface extends JFrame {
         searchPanel.add(removeButton);
         searchPanel.add(removeGolferButton);
         searchPanel.add(removeStaffButton);
+        searchPanel.add(removeReservationButton);
         searchPanel.add(updateButton);
         searchPanel.add(updateReservationButton);
         searchPanel.add(updateGolferButton);
@@ -573,6 +607,27 @@ public class SQLInterface extends JFrame {
     }
 
     public Integer getSelectedStaffID() {
+        int selectedRow = resultTable.getSelectedRow();
+        if (selectedRow == -1) {
+            return null; // No selection
+        }
+        
+        int modelRow = resultTable.convertRowIndexToModel(selectedRow); // handles sorting
+        Object value = resultTable.getModel().getValueAt(modelRow, 0);
+
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else {
+            try {
+                return Integer.parseInt(value.toString());
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+    }
+
+    public Integer getSelectedReservationID() {
         int selectedRow = resultTable.getSelectedRow();
         if (selectedRow == -1) {
             return null; // No selection
