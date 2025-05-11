@@ -38,7 +38,7 @@ public class Db {
 	private Connection connection;
 	
 	public Db() {
-		String password = "tgu$K+wyeCG7P-fq"; //TODO: set this to your password
+		String password = ""; //TODO: set this to your password
 		String encodedPassword; 
 		try {
 			encodedPassword = URLEncoder.encode(password, StandardCharsets.UTF_8.toString());

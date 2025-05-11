@@ -13,6 +13,7 @@ public class SQLInterface extends JFrame {
     private JButton addReservationButton;
     private JButton addGolferButton;
     private JButton addStaffButton;
+    private JButton addMenuButton;
     private JButton removeButton;
     private JButton updateButton;
     private JButton totalReservationsButton;
@@ -39,7 +40,7 @@ public class SQLInterface extends JFrame {
 
     private Db db;
 
-    private static final String INACTIVE_GOLFERS_QUERY = "SELECT Golfers.GolferID, Golfers.SName, Golfers.LastName, Golfers.MembershipStatus "
+    private static final String INACTIVE_GOLFERS_QUERY = "SELECT Golfers.GolferID, Golfers.FirstName, Golfers.LastName, Golfers.MembershipStatus "
             +
             "FROM Golfers " +
             "WHERE Golfers.golferID NOT IN (SELECT GolferID FROM Reservations)";
@@ -65,13 +66,13 @@ public class SQLInterface extends JFrame {
             "ORDER BY totalReservations DESC " + 
             "LIMIT 5";
     
-    private static final String TOTAL_SPENDING_RESERVATION_QUERY = "SELECT  g.GolferID, g.SName, g.LastName, COUNT(r.ReservationID) AS NumReservations, SUM(r.TotalCost) AS TotalSpent " + 
+    private static final String TOTAL_SPENDING_RESERVATION_QUERY = "SELECT  g.GolferID, g.FirstName, g.LastName, COUNT(r.ReservationID) AS NumReservations, SUM(r.TotalCost) AS TotalSpent " + 
             "FROM Golfers g " +
             "LEFT JOIN Reservations r ON g.GolferID = r.GolferID " +
-            "GROUP BY g.GolferID, g.SName, g.LastName " +
+            "GROUP BY g.GolferID, g.FirstName, g.LastName " +
             "ORDER BY TotalSpent DESC;";
 
-    private static final String FREE_LOADER_QUERY = "SELECT g.GolferID, g.SName, g.LastName "
+    private static final String FREE_LOADER_QUERY = "SELECT g.GolferID, g.FirstName, g.LastName "
             +
             "FROM Golfers g " +
             "WHERE g.GolferID IN (SELECT DISTINCT r.GolferID FROM Reservations r WHERE r.GolferID IS NOT NULL) " +
@@ -91,10 +92,10 @@ public class SQLInterface extends JFrame {
             "GROUP BY g.GolferID " + 
             ") AS GolferReservationCounts;";
 
-    private static final String RESERVATION_LEADER_QUERY = "SELECT g.GolferID, g.SName, g.LastName, COUNT(r.ReservationID) AS ReservationCount " +
+    private static final String RESERVATION_LEADER_QUERY = "SELECT g.GolferID, g.FirstName, g.LastName, COUNT(r.ReservationID) AS ReservationCount " +
             "FROM Golfers g " +
             "LEFT JOIN Reservations r ON g.GolferID = r.GolferID " + 
-            "GROUP BY g.GolferID, g.SName, g.LastName " +
+            "GROUP BY g.GolferID, g.FirstName, g.LastName " +
             "HAVING COUNT(r.ReservationID) > ( " + 
             "SELECT AVG(ReservationCount) AS AvgReservationsPerGolfer " +
             "FROM ( Select g.GolferID, COUNT(r.ReservationID) AS ReservationCount " +
@@ -141,6 +142,8 @@ public class SQLInterface extends JFrame {
         addGolferButton.setVisible(false);
         addStaffButton = new JButton("Add Staff");
         addStaffButton.setVisible(false);
+        addMenuButton = new JButton("Add Menu");
+        addMenuButton.setVisible(false);
         removeButton = new JButton("Remove");
         updateButton = new JButton("Update");
             
@@ -156,19 +159,19 @@ public class SQLInterface extends JFrame {
         });
 
         addReservationButton.addActionListener(e -> {
-            // Implement add functionality
-            //statusLabel.setText("Status: Add button clicked");
             new ReservationForm(this, db, () -> executeQuery("SELECT * FROM Reservations")).setVisible(true);
         });
 
         addGolferButton.addActionListener(e -> {
-            // Implement add golfer functionality
             new GolferForm(this, db, () -> executeQuery("SELECT * FROM Golfers")).setVisible(true);
         });
 
         addStaffButton.addActionListener(e -> {
-            // Implement add staff functionality
             new StaffForm(this, db, () -> executeQuery("SELECT * FROM Staff")).setVisible(true);
+        });
+
+        addMenuButton.addActionListener(e -> {
+            new MenuItemForm(this, db, () -> executeQuery("SELECT * FROM Menu")).setVisible(true);
         });
 
         removeButton.addActionListener(e -> {
@@ -195,6 +198,7 @@ public class SQLInterface extends JFrame {
 
 
         golfersButton.addActionListener(e -> {
+            addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addReservationButton.setVisible(false);
             addGolferButton.setVisible(true);
@@ -203,6 +207,7 @@ public class SQLInterface extends JFrame {
         });
 
         staffButton.addActionListener(e -> {
+            addMenuButton.setVisible(false);
             addStaffButton.setVisible(true);
             addGolferButton.setVisible(false);
             addReservationButton.setVisible(false);
@@ -211,6 +216,7 @@ public class SQLInterface extends JFrame {
         });
 
         buysButton.addActionListener(e -> {
+            addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
             addReservationButton.setVisible(false);
@@ -219,6 +225,7 @@ public class SQLInterface extends JFrame {
         });
 
         providesButton.addActionListener(e -> {
+            addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
             addReservationButton.setVisible(false);
@@ -227,6 +234,7 @@ public class SQLInterface extends JFrame {
         });
 
         reservationsButton.addActionListener(e -> {
+            addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
             addReservationButton.setVisible(true);
@@ -235,6 +243,7 @@ public class SQLInterface extends JFrame {
         });
 
         menuButton.addActionListener(e -> {
+            addMenuButton.setVisible(true);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
             addReservationButton.setVisible(false);
@@ -322,6 +331,7 @@ public class SQLInterface extends JFrame {
         searchPanel.add(addReservationButton);
         searchPanel.add(addGolferButton);
         searchPanel.add(addStaffButton);
+        searchPanel.add(addMenuButton);
         searchPanel.add(removeButton);
         searchPanel.add(updateButton);
 
@@ -580,6 +590,66 @@ class StaffForm extends JDialog {
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
+
+class MenuItemForm extends JDialog {
+    private JTextField itemNameField, priceField;
+    private JComboBox<String> categoryBox;
+    private JButton submitButton;
+    private Db db;
+    private Runnable onSuccess;
+
+    public MenuItemForm(JFrame parent, Db db, Runnable onSuccess) {
+        super(parent, "Add Menu Item", true);
+        this.db = db;
+        this.onSuccess = onSuccess;
+        setLayout(new GridLayout(4, 2, 5, 5));
+        setSize(350, 200);
+        setLocationRelativeTo(parent);
+
+        itemNameField = new JTextField();
+        categoryBox = new JComboBox<>(new String[] {"Entrees", "Drinks", "Snacks", "Breakfast"});
+        priceField = new JTextField();
+        submitButton = new JButton("Submit");
+
+        add(new JLabel("Item Name:"));
+        add(itemNameField);
+        add(new JLabel("Category:"));
+        add(categoryBox);
+        add(new JLabel("Price:"));
+        add(priceField);
+        add(new JLabel());
+        add(submitButton);
+
+        submitButton.addActionListener(e -> addMenuItem());
+    }
+
+    private void addMenuItem() {
+        try {
+            String itemName = itemNameField.getText().trim();
+            String category = categoryBox.getSelectedItem().toString();
+            double price = Double.parseDouble(priceField.getText().trim());
+
+            String sql = "INSERT INTO Menu (ItemName, Category, Price) VALUES (?, ?, ?)";
+            PreparedStatement stmt = db.getConnection().prepareStatement(sql);
+            stmt.setString(1, itemName);
+            stmt.setString(2, category);
+            stmt.setDouble(3, price);
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Menu item added successfully!");
+                onSuccess.run();
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add menu item.");
+            }
+        } catch (NumberFormatException nfe) {
+            JOptionPane.showMessageDialog(this, "Invalid price format.", "Input Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
