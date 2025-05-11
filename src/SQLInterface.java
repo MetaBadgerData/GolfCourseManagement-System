@@ -138,6 +138,8 @@ public class SQLInterface extends JFrame {
         home = new JButton("Home");
 
         searchField = new JTextField(10);
+        searchField.setPreferredSize(new Dimension(180, 30));
+        searchField.setMaximumSize(new Dimension(180, 30));
         searchButton = new JButton("Search");
         addReservationButton = new JButton("Add Reservation");
         addReservationButton.setVisible(false);
@@ -317,6 +319,11 @@ public class SQLInterface extends JFrame {
         });
 
         home.addActionListener(e -> {
+            updateReservationButton.setVisible(false);
+            addMenuButton.setVisible(false);
+            addStaffButton.setVisible(false);
+            addGolferButton.setVisible(false);
+            addReservationButton.setVisible(false);
             queryButtonsPanel.setVisible(true);
             statusLabel.setText("Status: Query buttons displayed");
         });
