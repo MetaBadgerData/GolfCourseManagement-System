@@ -16,6 +16,7 @@ public class SQLInterface extends JFrame {
     private JButton addMenuButton;
     private JButton removeButton;
     private JButton updateButton;
+    private JButton updateReservationButton;
     private JButton totalReservationsButton;
     private JButton habitsButton;
     private JButton lowSpendingButton;
@@ -148,6 +149,8 @@ public class SQLInterface extends JFrame {
         addMenuButton.setVisible(false);
         removeButton = new JButton("Remove");
         updateButton = new JButton("Update");
+        updateReservationButton = new JButton("Update Reservation");
+        updateReservationButton.setVisible(false);
             
         searchButton.addActionListener(e -> {
             String searchText = searchField.getText();
@@ -177,12 +180,14 @@ public class SQLInterface extends JFrame {
         });
 
         removeButton.addActionListener(e -> {
-            // Implement remove functionality
             statusLabel.setText("Status: Remove button clicked");
         });
         updateButton.addActionListener(e -> {
-            // Implement update functionality
             statusLabel.setText("Status: Update button clicked");
+        });
+
+        updateReservationButton.addActionListener(e -> {
+            new UpdateReservationForm(this, db, 1, () -> executeQuery("SELECT * FROM Reservations")).setVisible(true);
         });
 
         // tableButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -200,6 +205,7 @@ public class SQLInterface extends JFrame {
 
 
         golfersButton.addActionListener(e -> {
+            updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addReservationButton.setVisible(false);
@@ -209,6 +215,7 @@ public class SQLInterface extends JFrame {
         });
 
         staffButton.addActionListener(e -> {
+            updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(true);
             addGolferButton.setVisible(false);
@@ -218,6 +225,7 @@ public class SQLInterface extends JFrame {
         });
 
         buysButton.addActionListener(e -> {
+            updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
@@ -227,6 +235,7 @@ public class SQLInterface extends JFrame {
         });
 
         providesButton.addActionListener(e -> {
+            updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
@@ -236,6 +245,7 @@ public class SQLInterface extends JFrame {
         });
 
         reservationsButton.addActionListener(e -> {
+            updateReservationButton.setVisible(true);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
@@ -245,6 +255,7 @@ public class SQLInterface extends JFrame {
         });
 
         golfCoursesButton.addActionListener(e -> {
+            updateReservationButton.setVisible(false);
             addMenuButton.setVisible(false);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
@@ -254,6 +265,7 @@ public class SQLInterface extends JFrame {
         });
 
         menuButton.addActionListener(e -> {
+            updateReservationButton.setVisible(false);
             addMenuButton.setVisible(true);
             addStaffButton.setVisible(false);
             addGolferButton.setVisible(false);
@@ -346,6 +358,7 @@ public class SQLInterface extends JFrame {
         searchPanel.add(addMenuButton);
         searchPanel.add(removeButton);
         searchPanel.add(updateButton);
+        searchPanel.add(updateReservationButton);
 
         topPanel = new JPanel(new BorderLayout());
         JPanel topButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -660,6 +673,102 @@ class MenuItemForm extends JDialog {
             }
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(this, "Invalid price format.", "Input Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
+
+class UpdateReservationForm extends JDialog {
+    private JTextField golferIdField, courseIdField, dateField, timeField, costField;
+    private JButton submitButton;
+    private Db db;
+    private int reservationId;
+    private Runnable onSuccess;
+
+    public UpdateReservationForm(JFrame parent, Db db, int reservationId, Runnable onSuccess) {
+        super(parent, "Update Reservation", true);
+        this.db = db;
+        this.reservationId = reservationId;
+        this.onSuccess = onSuccess;
+
+        setLayout(new GridLayout(6, 2, 5, 5));
+        setSize(400, 300);
+        setLocationRelativeTo(parent);
+
+        golferIdField = new JTextField();
+        courseIdField = new JTextField();
+        dateField = new JTextField();   // Format: YYYY-MM-DD
+        timeField = new JTextField();   // Format: HH:MM
+        costField = new JTextField();   // Example: 59.99
+        submitButton = new JButton("Update");
+
+        add(new JLabel("Golfer ID:"));
+        add(golferIdField);
+        add(new JLabel("Course ID:"));
+        add(courseIdField);
+        add(new JLabel("Date (YYYY-MM-DD):"));
+        add(dateField);
+        add(new JLabel("Time (HH:MM):"));
+        add(timeField);
+        add(new JLabel("Total Cost:"));
+        add(costField);
+        add(new JLabel());
+        add(submitButton);
+
+        loadReservationData();
+
+        submitButton.addActionListener(e -> updateReservation());
+    }
+
+    private void loadReservationData() {
+        try {
+            String sql = "SELECT GolferID, CourseID, Date, Time, TotalCost FROM Reservations WHERE ReservationID = ?";
+            PreparedStatement stmt = db.getConnection().prepareStatement(sql);
+            stmt.setInt(1, reservationId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                golferIdField.setText(String.valueOf(rs.getInt("GolferID")));
+                courseIdField.setText(String.valueOf(rs.getInt("CourseID")));
+                dateField.setText(rs.getString("Date"));
+                timeField.setText(rs.getString("Time"));
+                costField.setText(String.valueOf(rs.getDouble("TotalCost")));
+            } else {
+                JOptionPane.showMessageDialog(this, "Reservation not found.", "Error", JOptionPane.ERROR_MESSAGE);
+                dispose();
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error loading data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateReservation() {
+        try {
+            int golferId = Integer.parseInt(golferIdField.getText().trim());
+            int courseId = Integer.parseInt(courseIdField.getText().trim());
+            String date = dateField.getText().trim();
+            String time = timeField.getText().trim();
+            double totalCost = Double.parseDouble(costField.getText().trim());
+
+            String sql = "UPDATE Reservations SET GolferID=?, CourseID=?, Date=?, Time=?, TotalCost=? WHERE ReservationID=?";
+            PreparedStatement stmt = db.getConnection().prepareStatement(sql);
+            stmt.setInt(1, golferId);
+            stmt.setInt(2, courseId);
+            stmt.setString(3, date);
+            stmt.setString(4, time);
+            stmt.setDouble(5, totalCost);
+            stmt.setInt(6, reservationId);
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Reservation updated successfully!");
+                onSuccess.run();
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update reservation.");
+            }
+        } catch (NumberFormatException nfe) {
+            JOptionPane.showMessageDialog(this, "Please enter valid numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
         }
