@@ -18,6 +18,7 @@ public class SQLInterface extends JFrame {
     private JButton addMenuButton;
     private JButton removeButton;
     private JButton removeGolferButton;
+    private JButton removeStaffButton;
     private JButton updateButton;
     private JButton updateReservationButton;
     private JButton updateGolferButton;
@@ -147,6 +148,7 @@ public class SQLInterface extends JFrame {
         searchField.setPreferredSize(new Dimension(180, 30));
         searchField.setMaximumSize(new Dimension(180, 30));
         searchButton = new JButton("Search");
+
         addReservationButton = new JButton("Add Reservation");
         addReservationButton.setVisible(false);
         addGolferButton = new JButton("Add Golfer");
@@ -159,6 +161,8 @@ public class SQLInterface extends JFrame {
         removeButton = new JButton("Remove");
         removeGolferButton = new JButton("Remove Golfer");
         removeGolferButton.setVisible(false);
+        removeStaffButton = new JButton("Remove staff");
+        removeStaffButton.setVisible(false);
 
         updateButton = new JButton("Update");
         updateReservationButton = new JButton("Update Reservation");
@@ -220,6 +224,28 @@ public class SQLInterface extends JFrame {
             }
         });
 
+        removeStaffButton.addActionListener(e -> {
+            Integer selectedStaffID = getSelectedStaffID();
+            if (selectedStaffID == null) {
+                JOptionPane.showMessageDialog(this, "Please select a staff member to remove.");
+                return;
+            }
+
+            String sql = "DELETE FROM Staff WHERE StaffID = ?";
+            try (PreparedStatement stmt = db.getConnection().prepareStatement(sql)) {
+                stmt.setInt(1, selectedStaffID);
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(this, "Staff member removed successfully!");
+                    executeQuery("SELECT * FROM Staff");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to remove staff member.");
+                }
+            } catch (SQLException ex) {
+                showError("SQL Error: " + ex.getMessage());
+            }
+        });
+
         updateButton.addActionListener(e -> {
             statusLabel.setText("Status: Update button clicked");
         });
@@ -259,6 +285,7 @@ public class SQLInterface extends JFrame {
 
 
         golfersButton.addActionListener(e -> {
+            removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(true);
             updateButton.setVisible(false);
             updateGolferButton.setVisible(true);
@@ -272,6 +299,7 @@ public class SQLInterface extends JFrame {
         });
 
         staffButton.addActionListener(e -> {
+            removeStaffButton.setVisible(true);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
@@ -284,6 +312,7 @@ public class SQLInterface extends JFrame {
         });
 
         buysButton.addActionListener(e -> {
+            removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
@@ -296,6 +325,7 @@ public class SQLInterface extends JFrame {
         });
 
         providesButton.addActionListener(e -> {
+            removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
@@ -308,6 +338,7 @@ public class SQLInterface extends JFrame {
         });
 
         playsButton.addActionListener(e -> {
+            removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
@@ -320,6 +351,7 @@ public class SQLInterface extends JFrame {
         });
 
         reservationsButton.addActionListener(e -> {
+            removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(true);
@@ -332,6 +364,7 @@ public class SQLInterface extends JFrame {
         });
 
         golfCoursesButton.addActionListener(e -> {
+            removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
@@ -344,6 +377,7 @@ public class SQLInterface extends JFrame {
         });
 
         menuButton.addActionListener(e -> {
+            removeStaffButton.setVisible(false);
             removeGolferButton.setVisible(false);
             updateGolferButton.setVisible(false);
             updateReservationButton.setVisible(false);
@@ -447,6 +481,7 @@ public class SQLInterface extends JFrame {
         searchPanel.add(addMenuButton);
         searchPanel.add(removeButton);
         searchPanel.add(removeGolferButton);
+        searchPanel.add(removeStaffButton);
         searchPanel.add(updateButton);
         searchPanel.add(updateReservationButton);
         searchPanel.add(updateGolferButton);
@@ -524,6 +559,27 @@ public class SQLInterface extends JFrame {
 
         int modelRow = resultTable.convertRowIndexToModel(selectedRow); // handles sorting
         Object value = resultTable.getModel().getValueAt(modelRow, 0); // assuming ID is in column 0
+
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else {
+            try {
+                return Integer.parseInt(value.toString());
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+    }
+
+    public Integer getSelectedStaffID() {
+        int selectedRow = resultTable.getSelectedRow();
+        if (selectedRow == -1) {
+            return null; // No selection
+        }
+        
+        int modelRow = resultTable.convertRowIndexToModel(selectedRow); // handles sorting
+        Object value = resultTable.getModel().getValueAt(modelRow, 0);
 
         if (value instanceof Integer) {
             return (Integer) value;
